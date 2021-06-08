@@ -162,6 +162,16 @@ WHERE  modified_date IS NULL
     else {
       CRM_Core_DAO::singleValueQuery("TRUNCATE TABLE civicrm_acl_contact_cache");
     }
+
+    // Rebuild the cache for the user whose action triggered the reset
+    // This seems to prevent most (maybe all?) of the intermittent ACL
+    // permission failures when users belong to multiple ACL groups.
+    $session = CRM_Core_Session::singleton();
+    $contactId = $session->get('userID');
+    if ($contactId != NULL) {
+      self::build($contactId);
+    }
+
   }
 
   /**

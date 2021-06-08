@@ -176,6 +176,8 @@ WHERE contact_id IN ({$contact_id_list})
     $whereTables = [];
 
     $permission = CRM_ACL_API::whereClause($type, $tables, $whereTables, NULL, FALSE, FALSE, TRUE);
+    // FIXME NOT FOR USE IN PRODUCTION!
+    watchdog('permission_check', $permission);
     $from = CRM_Contact_BAO_Query::fromClause($whereTables);
 
     $query = "
