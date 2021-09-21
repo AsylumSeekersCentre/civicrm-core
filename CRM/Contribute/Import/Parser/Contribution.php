@@ -709,6 +709,22 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
               'email' => $email,
               'contact_type' => $params['contact_type'],
             ];
+            $ruleGroup = civicrm_api3('RuleGroup', 'getsingle', [
+              'contact_type' => $params['contact_type'],
+              'used' => 'Unsupervised',
+            ]);
+            $dedupeRule = (isset($ruleGroup['is_error']) && $ruleGroup['is_error']) ? NULL : civicrm_api3('Rule', 'get', [
+              'sequential' => 1,
+              'dedupe_rule_group_id' => $ruleGroup['id'],
+            ]);
+            if ($dedupeRule && !($dedupeRule['is_error'])) {
+              foreach ($dedupeRule['values'] as $rulePart) {
+                $ruleFieldName = $rulePart['rule_field'];
+                if (!array_key_exists($ruleFieldName, $emailParams) && array_key_exists($ruleFieldName, $params) && $params[$ruleFieldName]) {
+                  $emailParams[$ruleFieldName] = $params[$ruleFieldName];
+                }
+              }
+            }
             $checkDedupe = _civicrm_api3_deprecated_duplicate_formatted_contact($emailParams);
             if (!$checkDedupe['is_error']) {
               return civicrm_api3_create_error("Invalid email address(doesn't exist) $email. Row was skipped");
